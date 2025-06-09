@@ -1,10 +1,11 @@
-import './App.css';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Sing from './components/Sing.Jsx';
+import React from "react";
+import LoginForm from "./components/LoginForm";
 
 function App() {
   return (
- <Sing/>
+    <div className="container mt-5">
+      <LoginForm />
+    </div>
   );
 }
 
