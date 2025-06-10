@@ -1,109 +1,115 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loginRequest } from "../redux/actions/authActions";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import pic from '../assetse/pic.png';
 
 const LoginForm = () => {
   const dispatch = useDispatch();
-  const { loading, error, user } = useSelector((state) => state.auth);
+  const { error } = useSelector(state => state.auth);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [captchaChecked, setCaptchaChecked] = useState(false);
-  const [formError, setFormError] = useState("");
+  const [userCaptcha, setUserCaptcha] = useState("");
+  const [captcha, setCaptcha] = useState(generateCaptcha());
+  const [errors, setErrors] = useState({});
 
-  const handleLogin = () => {
-    if (!username || !password) {
-      setFormError("All fields are required.");
-      return;
+  function generateCaptcha() {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  }
+
+  const validate = () => {
+    const newErrors = {};
+    if (!username) newErrors.username = "Username is required";
+    if (!password) newErrors.password = "Password is required";
+    if (!userCaptcha) newErrors.userCaptcha = "Captcha is required";
+    else if (userCaptcha !== captcha) newErrors.userCaptcha = "Captcha is incorrect";
+    return newErrors;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+    } else {
+      setErrors({});
+      dispatch(loginRequest({ username, password }));
     }
-
-    if (!captchaChecked) {
-      setFormError("Please verify that you are human.");
-      return;
-    }
-
-    setFormError("");
-    dispatch(loginRequest({ username, password }));
   };
 
   return (
     <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
-      <div className="bg-white shadow p-4 rounded" style={{ width: "350px" }}>
-        {/* Top error alert */}
-        {error && (
-          <div className="alert alert-danger d-flex align-items-center" role="alert">
-            <span className="me-2">❌</span>
-            {error || "Invalid Username."}
-          </div>
-        )}
+      <img src={pic} alt="login" />
+      <form className="bg-white p-5 shadow rounded" style={{ width: "350px" }} onSubmit={handleSubmit}>
+        <h4 className="text-center mb-4 text-primary">Welcome! Log In</h4>
 
-        <h4 className="text-center mb-4">Welcome! Log In</h4>
-
-        {/* Username */}
         <div className="mb-3">
-          <label className="form-label fw-semibold">User Name</label>
           <input
-            className={`form-control ${!username && formError ? "is-invalid" : ""}`}
-            placeholder="Enter your username"
+            type="text"
+            className={`form-control ${errors.username ? "is-invalid" : ""}`}
+            placeholder="Username"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => {
+              setUsername(e.target.value);
+              if (errors.username) setErrors(prev => ({ ...prev, username: "" }));
+            }}
           />
-          {!username && formError && <div className="text-danger small">Required</div>}
+          {errors.username && <div className="invalid-feedback">{errors.username}</div>}
         </div>
 
-        {/* Password */}
         <div className="mb-3">
-          <label className="form-label fw-semibold">Password</label>
           <input
             type="password"
-            className={`form-control ${!password && formError ? "is-invalid" : ""}`}
-            placeholder="Enter your password"
+            className={`form-control ${errors.password ? "is-invalid" : ""}`}
+            placeholder="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (errors.password) setErrors(prev => ({ ...prev, password: "" }));
+            }}
           />
-          {!password && formError && <div className="text-danger small">Required</div>}
+          {errors.password && <div className="invalid-feedback">{errors.password}</div>}
         </div>
 
-        {/* Captcha checkbox */}
-        <div className="form-check mb-3">
+        <div className="mb-3">
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <strong className="text-danger">{captcha}</strong>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => {
+                setCaptcha(generateCaptcha());
+                setUserCaptcha("");
+                setErrors(prev => ({ ...prev, userCaptcha: "" }));
+              }}
+            >
+              Refresh
+            </button>
+          </div>
           <input
-            className="form-check-input"
-            type="checkbox"
-            checked={captchaChecked}
-            onChange={() => setCaptchaChecked(!captchaChecked)}
-            id="captcha"
+            type="text"
+            className={`form-control ${errors.userCaptcha ? "is-invalid" : ""}`}
+            placeholder="Enter Captcha"
+            value={userCaptcha}
+            onChange={(e) => {
+              setUserCaptcha(e.target.value);
+              if (errors.userCaptcha) setErrors(prev => ({ ...prev, userCaptcha: "" }));
+            }}
           />
-          <label className="form-check-label" htmlFor="captcha">
-            I am human
-          </label>
+          {errors.userCaptcha && <div className="invalid-feedback">{errors.userCaptcha}</div>}
         </div>
 
-        {/* Forgot Password */}
-        <div className="text-end mb-3">
-          <a href="#" className="text-decoration-none">
-            <span role="img" aria-label="lock">🔒</span> Forgot password?
-          </a>
+        {error && <div className="text-danger mb-2">{error}</div>}
+
+        <button className="btn btn-danger w-100 mb-2" type="submit">Login</button>
+
+        <div className="text-center">
+          <button type="button" className="btn btn-link text-decoration-none p-0">
+            Forgot Password?
+          </button>
         </div>
-
-        {/* Login Button */}
-        <button
-          className="btn btn-danger w-100"
-          onClick={handleLogin}
-          disabled={loading}
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-
-        {/* Success */}
-        {user && (
-          <p className="text-success text-center mt-3">Login Success ✅</p>
-        )}
-
-        {/* Manual Form Error */}
-        {formError && !error && (
-          <div className="text-danger text-center mt-2">{formError}</div>
-        )}
-      </div>
+      </form>
     </div>
   );
 };

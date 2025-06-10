@@ -1,12 +1,10 @@
 import React from "react";
-import LoginForm from "./components/LoginForm";
-
+import LoginForm from './components/LoginForm'
 function App() {
   return (
-    <div className="container mt-5">
+    <div >
       <LoginForm />
     </div>
   );
 }
-
 export default App;
